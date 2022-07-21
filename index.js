@@ -18,10 +18,6 @@ app.use(cors({optionsSuccessStatus: 200}));  // some legacy browsers choke on 20
 app.use(express.static('public'));
 
 
-
-
-
-
 // http://expressjs.com/en/starter/basic-routing.html
 app.get("/", function (req, res) {
   res.sendFile(__dirname + '/views/index.html');
@@ -39,16 +35,29 @@ var listener = app.listen(process.env.PORT || 3000, function () {
   console.log('Your app is listening on port ' + listener.address().port);
 });
 
-app.use('/api/:date', (req, res) => {
-  let dateInput = req.params.date;
+//Convert date to required formats
+const dateConvertJson = date => {
   
-  (dateInput == parseInt(dateInput).toString()) ? (dateInput = parseInt(dateInput)) : null;
-  let date = (new Date(dateInput)).toUTCString();
-  
-  if (date == 'Invalid Date') {
-    res.json({'error': "Invalid Date"});
+  let dateFormatted;
+  (date == parseInt(date).toString()) ? (dateFormatted = parseInt(date)) : dateFormatted = date;
+  let dateUTC = (new Date(dateFormatted)).toUTCString();
+  console.log(dateFormatted, date, dateUTC);
+
+  if (dateUTC == 'Invalid Date') {
+    return {error: 'Invalid Date'};
   }
   else {
-    res.json({'unix':`${Date.parse(date)}`, 'utc':`${date}`});
+    return {'unix':Date.parse(dateUTC), 'utc':`${dateUTC}`};
   }
+}
+
+app.get('/api/', (req, res) => {
+  res.json(dateConvertJson(Date.now()));
+})
+
+app.use('/api/:date', (req, res) => {
+  
+  let dateInput = req.params.date;
+  
+  res.json(dateConvertJson(dateInput));
 })
